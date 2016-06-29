@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<title>Crossover Video Portal</title>
-</head>
-<body>
-	<h2>Crossover Video Portal</h2>
-	<hr />
-	If you see this page, it means you have configured the app correctly. Put your client side code in /client folder and the application will start serving your code.
-</body>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <script type="text/javascript" src="angular.min.js"></script>
+    <script type="text/javascript" src="appAngular.js"></script>
+    <script src="angular-ui-router.js"></script>
+  </head>
+  <body ng-app="videoPortal">
+    <div ui-view></div>
+  </body>
 </html>

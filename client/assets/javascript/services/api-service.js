@@ -26,13 +26,18 @@ angular.module('videoPortal').
             return deferred.promise;
         };
 
-        //TODO: Create a config module to handle all API routes/urls
         return {
             logout: function(data){
                return makeAPICall('/user/logout', 'GET', {}, {sessionId: data}); 
             },
+            allVideos: function(sessionId, skip, limit){
+               return makeAPICall('/videos', 'GET', {}, {sessionId: sessionId, skip:skip, limit:limit}); 
+            },
 
-            
+            getVideoById: function(sessionId,videoId){
+              return makeAPICall('/video', 'GET', {}, {sessionId: sessionId, videoId: videoId});   
+            },
+
 
 
             create_place: function(place){

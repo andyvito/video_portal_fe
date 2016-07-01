@@ -18,26 +18,56 @@
 					    			});		    	
 					    		}
 					    		else{
-					    			//TODO: clean password and username from UI
 									$location.path('login');
-									console.log('no found');
-									console.log(data);
 					    		}
 					    	});
 			};
 
+			$scope.logout = function(){
+				loginService.logout()
+						.then(function(data){
+					        $location.path('login');
+						});
+			};
+
+
 	}]);
 
-	app.controller('VideosController', ['$scope', '$location', '$cookies', 'loginService', 
-		function($scope,$location,$cookies,loginService){
-		$scope.logout = function($scope){
-			//$cookies.remove('sessionId');
-			loginService.logout($scope)
-					.then(function(data){
-						console.log(data);
-				        $location.path('/login');
-					});
-		};
+	app.controller('VideosController', ['$scope', '$state', '$cookies', 'videosService', 
+		function($scope,$state,$cookies,videosService){
+
+			videosService.allVideos($cookies.get('sessionId'),0,9).then(function(videos){
+							$scope.videos = videos.data;
+							console.log(videos.data);
+						});
+
+			$scope.goToVideo = function(currentVideo){
+								$state.go('video',{id:currentVideo._id})
+							};
+	}]);
+
+
+	app.controller('VideoController', ['$scope', '$location', '$cookies', '$stateParams', '$sce',  'videosService', 'ApiService',
+		function($scope, $location, $cookies, $stateParams, $sce,  videosService, ApiService){
+			var videoId = $stateParams.id;
+			videosService.getVideoById($cookies.get('sessionId'),videoId).then(function(video){
+							$scope.video = {};
+ 							$scope.video.url = video.data.url;
+						});
+
+
+			/*videosService.getVideoById($cookies.get('sessionId'),videoId).then(function(video){
+							$rootScope.video = {};
+ 							$rootScope.video.url = video.data.url;
+						});*/
+
+
+/*			$scope.video = {};
+			ApiService.getVideoById($cookies.get('sessionId'),videoId).then(function(video){
+ 										$scope.video.url = video.data.url;
+			    					});
+*/
+
 
 	}]);
 
@@ -57,8 +87,6 @@
 	  	  url: '/videos',
 	  	  resolve:{
 	  	  	function($location, $cookies){
-	  	  		//$cookies.remove('sessionId')
-	  	  		console.log($cookies.get('sessionId'));
 	  	  		if (!$cookies.get('sessionId')){
 	  	  			$location.path('login');
 	  	  		}
@@ -97,7 +125,7 @@
 		    				});
     			});
 		    },
-		    logout:function($scope){				
+		    logout:function(){				
 		    	return new Promise(function(resolve){
 		    		ApiService.logout($cookies.get('sessionId')).then(function(data){
 		    			$cookies.remove('sessionId');
@@ -110,6 +138,55 @@
 		    }
 		}
 	});
+
+
+
+	app.factory('videosService', function($q, $cookies, ApiService){
+		return{
+		    allVideos: function(sessionId,skip,limit) {
+					    var deferred = $q.defer();
+
+			    		ApiService.allVideos(sessionId,skip,limit)
+			    					.then(function(data){
+			    						deferred.resolve(data);
+			    					});
+			    			
+					    return deferred.promise;
+					  },
+			getVideoById: function(sessionId,videoId){
+						var deferred = $q.defer();
+
+			    		ApiService.getVideoById(sessionId,videoId)
+			    					.then(function(data){
+			    						deferred.resolve(data);
+			    					});
+			    			
+					    return deferred.promise;
+
+						/*ApiService.getVideoById(sessionId,videoId)
+			    					.then(function(data){
+			    						return data;
+			    					});*/
+
+					  }
+			}
+	});
+
+
+	//Directive Filter for Show Video
+	app.filter("trustUrl", ['$sce', function ($sce) {
+	        return function (recordingUrl) {
+	            return $sce.trustAsResourceUrl(recordingUrl);
+	        };
+	    }
+	  ]
+	);
+
+
+
+
+
+
 
 
 })();

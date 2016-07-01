@@ -55,6 +55,10 @@ margin-top:30px;
 	height: auto;
 }
 
+.vidcontainer p{
+    text-align: justify;
+    text-justify: inter-word;
+}
 
 
 
@@ -261,4 +265,36 @@ a, a:hover, a:focus, .btn:focus, .btn:hover, .btn:active, .btn:active:focus, .bt
     outline: 0;
     outline-color: transparent;
     outline-style: none;
+}
+
+
+
+
+.rating{
+  color: #a9a9a9;
+  margin: 0;
+  padding: 0;
+  font-size: 2em;
+}
+
+ul.rating {
+  display: inline-block;
+}
+
+.rating li {
+  list-style-type: none;
+  display: inline-block;
+  padding: 1px;
+  text-align: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.rating .filled {
+  color: yellow;
+}
+
+
+.star-rating-inline{
+    display:inline;
 }

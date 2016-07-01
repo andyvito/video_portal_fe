@@ -28,16 +28,19 @@ angular.module('videoPortal').
 
         return {
             logout: function(data){
-               return makeAPICall('/user/logout', 'GET', {}, {sessionId: data}); 
+                return makeAPICall('/user/logout', 'GET', {}, {sessionId: data}); 
             },
             allVideos: function(sessionId, skip, limit){
-               return makeAPICall('/videos', 'GET', {}, {sessionId: sessionId, skip:skip, limit:limit}); 
+                return makeAPICall('/videos', 'GET', {}, {sessionId: sessionId, skip:skip, limit:limit}); 
             },
 
-            getVideoById: function(sessionId,videoId){
-              return makeAPICall('/video', 'GET', {}, {sessionId: sessionId, videoId: videoId});   
+            getVideoById: function(sessionId, videoId){
+                return makeAPICall('/video', 'GET', {}, {sessionId: sessionId, videoId: videoId});   
             },
 
+            insertVideoRating: function(sessionId, videoId, rating){
+                return makeAPICall('/video/ratings', 'POST', {videoId: videoId, rating: rating}, {sessionId: sessionId});
+            },
 
 
             create_place: function(place){

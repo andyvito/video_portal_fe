@@ -4,8 +4,9 @@
 	var app = angular.module('videoPortal',['ui.router','ngCookies','angular-md5']);
 
 
-	app.controller('LoginController', ['$scope','$rootScope','$location', '$cookies', 'loginService', 'md5', 
-		function($scope,$rootScope, $location, $cookies, loginService, md5){
+	app.controller('LoginController', ['$scope', '$state', '$rootScope','$location', '$cookies', 
+		'loginService', 'md5', 
+		function($scope,$state,$rootScope, $location, $cookies, loginService, md5){
 
 			$scope.submit = function(){				
 				$scope.user.password = md5.createHash($scope.user.password || '');
@@ -30,44 +31,52 @@
 						});
 			};
 
+			$scope.goToAllVideos = function(){
+				$state.go('videos')
+			};
+
 
 	}]);
 
-	app.controller('VideosController', ['$scope', '$state', '$cookies', 'videosService', 
-		function($scope,$state,$cookies,videosService){
+	app.controller('VideosController', ['$scope', '$state', '$cookies', 'videosService', '$filter',
+		function($scope,$state,$cookies,videosService,$filter){
 
 			videosService.allVideos($cookies.get('sessionId'),0,9).then(function(videos){
 							$scope.videos = videos.data;
-							console.log(videos.data);
 						});
 
 			$scope.goToVideo = function(currentVideo){
 								$state.go('video',{id:currentVideo._id})
 							};
+
 	}]);
 
 
-	app.controller('VideoController', ['$scope', '$location', '$cookies', '$stateParams', '$sce',  'videosService', 'ApiService',
-		function($scope, $location, $cookies, $stateParams, $sce,  videosService, ApiService){
+	app.controller('VideoController', ['$scope', '$location', '$cookies', '$stateParams', '$sce', '$filter',
+		'videosService', 'ApiService', 
+
+		function($scope, $location, $cookies, $stateParams, $sce, $filter, videosService, ApiService){
 			var videoId = $stateParams.id;
+			$scope.ownRating = 1;
+
+
 			videosService.getVideoById($cookies.get('sessionId'),videoId).then(function(video){
 							$scope.video = {};
- 							$scope.video.url = video.data.url;
+ 							$scope.video = video.data;
+ 							$scope.overallRatings = $filter('calculateAverage')(video.data.ratings);
+ 							console.log(video.data);
 						});
 
+		    $scope.rateFunction = function(rating) {
+		      						console.log('Llego Function Rating' + rating);
+		      						videosService.insertVideoRating($cookies.get('sessionId'), videoId, rating).then(function(result){
+									console.log(result.data);
+									//$scope.rating = $filter('calculateAverage')(result.data.ratings);
+ 									$scope.overallRatings = $filter('calculateAverage')(result.data.ratings);
+									
+								});
 
-			/*videosService.getVideoById($cookies.get('sessionId'),videoId).then(function(video){
-							$rootScope.video = {};
- 							$rootScope.video.url = video.data.url;
-						});*/
-
-
-/*			$scope.video = {};
-			ApiService.getVideoById($cookies.get('sessionId'),videoId).then(function(video){
- 										$scope.video.url = video.data.url;
-			    					});
-*/
-
+		    };
 
 	}]);
 
@@ -162,14 +171,19 @@
 			    					});
 			    			
 					    return deferred.promise;
+					  },
+			insertVideoRating: function(sessionId, videoId, rating){
+						var deferred = $q.defer();
 
-						/*ApiService.getVideoById(sessionId,videoId)
+			    		ApiService.insertVideoRating(sessionId, videoId, rating)
 			    					.then(function(data){
-			    						return data;
-			    					});*/
-
+			    						deferred.resolve(data);
+			    					});
+			    			
+					    return deferred.promise;
 					  }
 			}
+
 	});
 
 
@@ -179,10 +193,63 @@
 	            return $sce.trustAsResourceUrl(recordingUrl);
 	        };
 	    }
-	  ]
-	);
+	  ]);
+
+	app.filter('calculateAverage', function () {
+	  return function (MyData) {
+	    var sum = 0; 
+	    for(var i = 0; i < MyData.length; i++){
+	    	sum += parseInt(MyData[i], 10); 
+	    };
+
+	    var avg = sum/MyData.length;
+
+	    return avg; 
+	  };
+	});
 
 
+
+	app.directive('starRating', function() {
+		return {
+			restrict : 'A',
+			template : '<ul class="rating">'
+					 + '	<li ng-repeat="star in stars" ng-class="star" ng-click="toggle($index)">'
+					 + '\u2605'
+					 + '</li>'
+					 + '</ul>',
+			scope : {
+				ratingValue : '=',
+				max : '=',
+				onRatingSelected : '&'
+			},
+			link : function(scope, elem, attrs) {
+				var updateStars = function() {
+					scope.stars = [];
+					for ( var i = 0; i < scope.max; i++) {
+						scope.stars.push({
+							filled : i < scope.ratingValue
+						});
+					}
+				};
+				
+				scope.toggle = function(index) {
+					scope.ratingValue = index + 1;
+					scope.onRatingSelected({
+						rating : index + 1
+					});
+				};
+				
+				scope.$watch('ratingValue',
+					function(oldVal, newVal) {
+						if (newVal) {
+							updateStars();
+						}
+					}
+				);
+			}
+		};
+	});
 
 
 

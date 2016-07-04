@@ -6,6 +6,10 @@ body {
   background-size: cover;
 }
 
+hr{
+    border-top: 1px solid #000;
+}
+
 .panel-default {
 opacity: 0.9;
 margin-top:30px;
@@ -297,4 +301,9 @@ ul.rating {
 
 .star-rating-inline{
     display:inline;
+}
+
+.videos-related a{
+    color:#000;
+    font-size: 1.3em;
 }

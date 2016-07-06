@@ -38,25 +38,39 @@
 
 	}]);
 
-	app.controller('VideosController', ['$scope', '$state', '$cookies', 'videosService', '$filter',
-		function($scope,$state,$cookies,videosService,$filter){
+	app.controller('VideosController', ['$scope', '$rootScope', '$state', '$cookies', 'videosService', '$filter',
+		function($scope, $rootScope, $state, $cookies, videosService, $filter){
+			$rootScope.numToLoad = 0;
+			$scope.showMore = true;
 
-			videosService.allVideos($cookies.get('sessionId'),0,9).then(function(videos){
+			videosService.allVideos($cookies.get('sessionId'),$rootScope.numToLoad,9).then(function(videos){
 							$scope.videos = videos.data;
+							$rootScope.numToLoad += 9;
 						});
 
 			$scope.goToVideo = function(currentVideo){
 								$state.go('video',{id:currentVideo._id})
 							};
 
+			$scope.moreVideos = function(){
+								videosService.allVideos($cookies.get('sessionId'),$rootScope.numToLoad,9).then(function(videos){
+									$rootScope.numToLoad += 9;
+									$scope.showMore = videos.data.length < 9 ? false : true;
+									angular.forEach(videos.data, function(v){
+									        $scope.videos.push(v);
+									    });
+								});
+							};
+
 	}]);
 
 
-	app.controller('VideoController', ['$scope', '$location', '$cookies', '$stateParams', '$sce', '$filter',
+	app.controller('VideoController', ['$scope', '$state', '$location', '$cookies', '$stateParams', '$sce', '$filter',
 		'videosService', 'ApiService', 
 
-		function($scope, $location, $cookies, $stateParams, $sce, $filter, videosService, ApiService){
+		function($scope, $state, $location, $cookies, $stateParams, $sce, $filter, videosService, ApiService){
 			var videoId = $stateParams.id;
+			
 			$scope.ownRating = 1;
 
 
@@ -64,14 +78,21 @@
 							$scope.video = {};
  							$scope.video = video.data;
  							$scope.overallRatings = $filter('calculateAverage')(video.data.ratings);
- 							console.log(video.data);
 						});
 
+			videosService.getRelatedVideos($cookies.get('sessionId')).then(function(videosRelated){
+							$scope.videosRelated = {};
+							$scope.videosRelated = videosRelated.data;
+
+						});
+
+		    $scope.changeVideo = function(currentVideo){
+		    					$state.go('video',{id:currentVideo._id})
+							};
+
+
 		    $scope.rateFunction = function(rating) {
-		      						console.log('Llego Function Rating' + rating);
 		      						videosService.insertVideoRating($cookies.get('sessionId'), videoId, rating).then(function(result){
-									console.log(result.data);
-									//$scope.rating = $filter('calculateAverage')(result.data.ratings);
  									$scope.overallRatings = $filter('calculateAverage')(result.data.ratings);
 									
 								});
@@ -161,7 +182,7 @@
 			    					});
 			    			
 					    return deferred.promise;
-					  },
+					  	},
 			getVideoById: function(sessionId,videoId){
 						var deferred = $q.defer();
 
@@ -171,7 +192,7 @@
 			    					});
 			    			
 					    return deferred.promise;
-					  },
+					  	},
 			insertVideoRating: function(sessionId, videoId, rating){
 						var deferred = $q.defer();
 
@@ -181,7 +202,21 @@
 			    					});
 			    			
 					    return deferred.promise;
-					  }
+					  	},
+			getRelatedVideos: function(sessionId){
+					    var deferred = $q.defer();
+
+					    //Pseudo random function to show some related videos
+			    		ApiService.allVideos(sessionId, Math.random() * (10 - 1) + 1,3)
+			    					.then(function(data){
+			    						deferred.resolve(data);
+			    					});
+			    			
+					    return deferred.promise;
+
+
+
+					  	}
 			}
 
 	});

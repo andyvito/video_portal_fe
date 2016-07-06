@@ -38,11 +38,14 @@
 
 	}]);
 
-	app.controller('VideosController', ['$scope', '$state', '$cookies', 'videosService', '$filter',
-		function($scope,$state,$cookies,videosService,$filter){
+	app.controller('VideosController', ['$scope', '$rootScope', '$state', '$cookies', 'videosService', '$filter',
+		function($scope, $rootScope, $state, $cookies, videosService, $filter){
+			$rootScope.numToLoad = 0;
+			$scope.showMore = true;
 
-			videosService.allVideos($cookies.get('sessionId'),0,9).then(function(videos){
+			videosService.allVideos($cookies.get('sessionId'),$rootScope.numToLoad,9).then(function(videos){
 							$scope.videos = videos.data;
+							$rootScope.numToLoad += 9;
 						});
 
 			$scope.goToVideo = function(currentVideo){
@@ -50,7 +53,13 @@
 							};
 
 			$scope.moreVideos = function(){
-								alert('Llego');
+								videosService.allVideos($cookies.get('sessionId'),$rootScope.numToLoad,9).then(function(videos){
+									$rootScope.numToLoad += 9;
+									$scope.showMore = videos.data.length < 9 ? false : true;
+									angular.forEach(videos.data, function(v){
+									        $scope.videos.push(v);
+									    });
+								});
 							};
 
 	}]);
